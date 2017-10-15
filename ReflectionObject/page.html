@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+  <script src="http://107.170.223.7/virtual_wallet/webpage//assets/js/jquery-2.1.0.min.js"></script>
+</head>
+
+<body>
+
+<h1>Example Page With Script</h1>
+
+<p id="col">HA:</p>
+  <script type='text/javascript'>
+    function doIt() {
+    alert('hello again');
+    return 'i did it!';
+    }
+  </script>
+
+  <script type='text/javascript'>
+    var el = document.getElementById("col");
+    function write (str)
+    {
+      el.innerHTML += "<p>" + str + "</p>";
+    }
+    var CSObject = function(jsonstring)
+    {
+      write("Beging construct");
+      write(jsonstring);
+      this.object = jQuery.parseJSON(jsonstring);
+      this.ObjName = this.object.ObjName;
+      
+			
+    };
+    
+    CSObject.prototype.callMethod = function(methodData, parameters)
+    {
+      var method = jQuery.parseJSON(methodData);
+      var ret = null;
+      var telegram = 
+      {
+        Name: this.ObjName,
+        MethodName: method.Name,
+        Parameters: parameters
+      };
+      
+      var url = 'jsb://callmethod/' + method.Name + '?&data=' + encodeURIComponent(JSON.stringify(telegram)) + '&_=' + Math.random();
+    
+    /*$.ajax({
+    url: url,
+    async: false,
+    success: function(data) {
+    // success, do work
+    if (data.Value)
+    {
+    ret = data.Value;
+    }
+    },
+    error: function(data) {
+    // error, handle failure
+    },
+    dataType:'json'
+    });*/
+    
+      write("CALLED ! " + url);
+      window.location.href = url;
+      return ret;
+    };
+
+    CSObject.prototype.create = function()
+    {
+      for (var i = 0; i < this.object.Methods.length; i++ )
+      {
+        var method = this.object.Methods[i];
+        
+        write("method " + method.Name);
+        if (method.Parameters.length == 0)
+          continue;
+          
+        var methodcreate = 'CSObject.prototype.' +method.Name + ' = function(';
+        var appendpar = "parameters = [];";
+        for (var j = 0; j < method.Parameters.length -1; j++ )
+        {
+          methodcreate += method.Parameters[j].Name + ", ";
+          appendpar += "parameters.push(" + method.Parameters[j].Name + ");"
+        }
+        appendpar += "parameters.push(" + method.Parameters[j].Name + ");"
+        methodcreate += method.Parameters[j].Name + "){ " + appendpar;
+        
+        methodcreate += "var methodData = '" + JSON.stringify(method) + "';"; 
+          
+        methodcreate += " var objmethod = method; return this.callMethod(methodData, parameters);};";
+        
+        write(methodcreate)
+        eval(methodcreate);
+      }
+    };
+  </script>
+  
+</body>
+</html>
